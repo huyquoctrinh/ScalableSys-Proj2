@@ -368,7 +368,9 @@ def _():
     from dspy.adapters.baml_adapter import BAMLAdapter
     from pydantic import BaseModel, Field
     from cache_method import LRUDataManager
-    from text_2_cypher import ExemplarSelector, QueryGenerator, CypherPostProcessor
+    from exemplar_selector import ExemplarSelector
+    from query_refinement import QueryGenerator
+    from post_processor import CypherPostProcessor
 
 
     load_dotenv()

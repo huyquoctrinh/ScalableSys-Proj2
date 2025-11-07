@@ -1,0 +1,2 @@
+cache_method
+text_2_cypher

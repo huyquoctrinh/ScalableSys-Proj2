@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "marimo-tutorials"
 version = "0.1.0"
@@ -11,4 +15,9 @@ dependencies = [
     "polars>=1.32.3",
     "pyarrow>=21.0.0",
     "python-dotenv>=1.1.1",
+    "sentence-transformers>=2.2.2",
+    "pydantic>=2.7.1"
 ]
+
+[tool.setuptools]
+packages = ["cache_method", "text_2_cypher"]
