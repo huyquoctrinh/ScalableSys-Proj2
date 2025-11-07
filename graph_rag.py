@@ -1,4 +1,3 @@
-from pydoc import text
 import marimo
 import time
 
@@ -131,7 +130,7 @@ def _(kuzu):
     class KuzuDatabaseManager:
         """Manages Kuzu database connection and schema retrieval."""
 
-        def __init__(self, db_path: str = "ldbc_1.kuzu"):
+        def __init__(self, db_path: str = "nobel.kuzu"):
             self.db_path = db_path
             self.db = kuzu.Database(db_path, read_only=True)
             self.conn = kuzu.Connection(self.db)
@@ -190,7 +189,7 @@ def _(BaseModel, Field):
     class Edge(BaseModel):
         label: str = Field(description="Relationship label")
         from_: Node = Field(alias="from", description="Source node label")
-        to: Node = Field(alias="from", description="Target node label")
+        to: Node = Field(alias="to", description="Target node label")
         properties: list[Property] | None
 
 
@@ -209,6 +208,7 @@ def _(
     Query,
     Text2Cypher,
     dspy,
+    json,
 ):
     import time
     class GraphRAG(dspy.Module):
@@ -224,8 +224,8 @@ def _(
 
         def get_cypher_query(self, question: str, input_schema: str) -> Query:
             prune_result = self.prune(question=question, input_schema=input_schema)
-            schema = prune_result.pruned_schema
-            text2cypher_result = self.text2cypher(question=question, input_schema=schema)
+            schema_json = prune_result.pruned_schema.model_dump_json()
+            text2cypher_result = self.text2cypher(question=question, input_schema=schema_json)
             cypher_query = text2cypher_result.query
             return cypher_query
         
@@ -260,13 +260,6 @@ def _(
                 "t2c_output_tokens": out_tok,
                 "t2c_tokens_per_s": tps,
             }
-        
-        def get_cypher_query(self, question: str, input_schema: str) -> Query:
-            prune_result = self.prune(question=question, input_schema=input_schema)
-            schema = prune_result.pruned_schema
-            text2cypher_result = self.text2cypher(question=question, input_schema=schema)
-            cypher_query = text2cypher_result.query
-            return cypher_query
 
         def run_query(
             self, db_manager: KuzuDatabaseManager, question: str, input_schema: str
@@ -316,10 +309,78 @@ def _(
                     "answer": answer,
                 }
                 return response
+        def measure_pipeline(self, db_manager, question: str, input_schema: str, token_counter=None) -> dict:
+            # token counter
+            if token_counter is None:
+                token_counter = getattr(self, "_default_token_counter", None)
+                if token_counter is None:
+                    def _fallback_tok(s: str) -> int:
+                        try:
+                            import tiktoken
+                            enc = tiktoken.get_encoding("cl100k_base")
+                            return len(enc.encode(s))
+                        except Exception:
+                            return max(1, len(s) // 4)
+                    token_counter = _fallback_tok
 
+            # 1) prune
+            t0 = time.perf_counter()
+            pr = self.prune(question=question, input_schema=input_schema)
+            t_prune = time.perf_counter() - t0
+            pruned = pr.pruned_schema.model_dump_json()
+
+            # 2) text2cypher
+            t1 = time.perf_counter()
+            t2c = self.text2cypher(question=question, input_schema=pruned)
+            t_t2c = time.perf_counter() - t1
+
+            try:
+                query_str = t2c.query.query
+            except AttributeError:
+                query_str = getattr(t2c, "query", None) or str(t2c)
+
+            t2c_out_tok = token_counter(query_str)
+            t2c_tps = t2c_out_tok / t_t2c if t_t2c > 0 else float("inf")
+
+            # 3) DB execute (+ fetch)
+            t2 = time.perf_counter()
+            try:
+                res = db_manager.conn.execute(query_str)
+                rows = [item for row in res for item in row]
+            except RuntimeError:
+                rows = None
+            t_db = time.perf_counter() - t2
+
+            # 4) answer
+            t3 = time.perf_counter()
+            ans = self.generate_answer(question=question, cypher_query=query_str, context=str(rows))
+            t_ans = time.perf_counter() - t3
+            try:
+                ans_text = ans.response
+            except AttributeError:
+                ans_text = str(ans)
+            ans_tok = token_counter(ans_text)
+            ans_tps = ans_tok / t_ans if t_ans > 0 else float("inf")
+
+            total = t_prune + t_t2c + t_db + t_ans
+
+            return {
+                "question": question,
+                "query": query_str,
+                "prune_s": t_prune,
+                "t2c_s": t_t2c,
+                "db_s": t_db,
+                "answer_s": t_ans,
+                "total_s": total,
+                "t2c_output_tokens": t2c_out_tok,
+                "t2c_tokens_per_s": t2c_tps,
+                "answer_output_tokens": ans_tok,
+                "answer_tokens_per_s": ans_tps,
+                "result_items": 0 if rows is None else len(rows),
+            }
 
     def run_graph_rag(questions: list[str], db_manager: KuzuDatabaseManager) -> list[Any]:
-        schema = str(db_manager.get_schema_dict)
+        schema = json.dumps(db_manager.get_schema_dict)
         rag = GraphRAG()
         # Run pipeline
         results = []
@@ -331,7 +392,7 @@ def _(
     return (run_graph_rag,)
 
 @app.cell
-def _(GraphRAG, KuzuDatabaseManager):
+def _(GraphRAG, KuzuDatabaseManager, json):
     def bench_t2c(db_path: str = "nobel.kuzu", question: str = None):
         """
         Headless-style timing for Text2Cypher only.
@@ -341,7 +402,7 @@ def _(GraphRAG, KuzuDatabaseManager):
             question = "Which scholars won prizes in Physics and were affiliated with University of Cambridge?"
 
         dbm = KuzuDatabaseManager(db_path)
-        schema = str(dbm.get_schema_dict)
+        schema = json.dumps(dbm.get_schema_dict)
         rag = GraphRAG()
 
         m = rag.measure_text2cypher(question=question, input_schema=schema)
@@ -350,8 +411,7 @@ def _(GraphRAG, KuzuDatabaseManager):
     return (bench_t2c,)
 
 @app.cell
-def _(bench_t2c):
-    import statistics as stats
+def _(bench_t2c, stats):
 
     def bench_t2c_stats(db_path: str = "nobel.kuzu",
                         question: str | None = None,
@@ -403,6 +463,8 @@ def _():
     from dotenv import load_dotenv
     from dspy.adapters.baml_adapter import BAMLAdapter
     from pydantic import BaseModel, Field
+    import json
+    import statistics as stats
 
     load_dotenv()
 
@@ -416,15 +478,112 @@ def _():
         dspy,
         kuzu,
         mo,
+        json,
     )
 
 @app.cell
-def _(bench_t2c_stats):
-    # change question/db_path if needed
-    bench_t2c_stats(
+def _(GraphRAG, KuzuDatabaseManager, json, stats):
+    import csv, datetime, pathlib
+    def bench_pipeline_csv(path="tests/questions.csv",
+                           db_path="nobel.kuzu",
+                           runs=3,
+                           save_csv=True,
+                           save_png=True):
+        dbm = KuzuDatabaseManager(db_path)
+        schema = json.dumps(dbm.get_schema_dict)
+        rag = GraphRAG()
+
+        # load CSV
+        with open(path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = [r for r in reader if r.get("question")]
+
+        # validate header
+        if not rows or "question" not in rows[0]:
+            raise ValueError("CSV must have at least a 'question' column.")
+
+        results = []
+        for r in rows:
+            q = r["question"].strip()
+            per = []
+            for _ in range(runs):
+                m = rag.measure_pipeline(db_manager=dbm, question=q, input_schema=schema)
+                per.append(m)
+                print(
+                    f"[PIPE] {q[:60]}... | prune {m['prune_s']:.3f}s | t2c {m['t2c_s']:.3f}s | "
+                    f"db {m['db_s']:.3f}s | ans {m['answer_s']:.3f}s | total {m['total_s']:.3f}s | "
+                    f"t2c {m['t2c_tokens_per_s']:.2f} tok/s | ans {m['answer_tokens_per_s']:.2f} tok/s"
+                )
+
+            def mean_sd(xs):
+                mu = stats.mean(xs)
+                sd = stats.stdev(xs) if len(xs) > 1 else 0.0
+                return mu, sd
+
+            mt_pr, sd_pr   = mean_sd([x["prune_s"] for x in per])
+            mt_t2c, sd_t2c = mean_sd([x["t2c_s"] for x in per])
+            mt_db, sd_db   = mean_sd([x["db_s"] for x in per])
+            mt_ans, sd_ans = mean_sd([x["answer_s"] for x in per])
+            mt_tot, sd_tot = mean_sd([x["total_s"] for x in per])
+            mt_tps, sd_tps = mean_sd([x["t2c_tokens_per_s"] for x in per])
+
+            results.append({
+                "question": q,
+                "tag": r.get("tag", ""),
+                "prune_s_mean": mt_pr, "prune_s_sd": sd_pr,
+                "t2c_s_mean": mt_t2c, "t2c_s_sd": sd_t2c,
+                "db_s_mean": mt_db, "db_s_sd": sd_db,
+                "answer_s_mean": mt_ans, "answer_s_sd": sd_ans,
+                "total_s_mean": mt_tot, "total_s_sd": sd_tot,
+                "t2c_tokps_mean": mt_tps, "t2c_tokps_sd": sd_tps,
+            })
+
+            # optional quick bar chart
+            if save_png:
+                try:
+                    import matplotlib.pyplot as plt
+                    stages = ["prune", "t2c", "db", "answer"]
+                    means  = [mt_pr, mt_t2c, mt_db, mt_ans]
+                    fig, ax = plt.subplots(figsize=(6, 3))
+                    ax.bar(stages, means)
+                    ax.set_ylabel("seconds")
+                    ax.set_title(q[:50] + "...")
+                    pathlib.Path("bench").mkdir(exist_ok=True)
+                    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    out_png = f"bench/pipeline_{ts}.png"
+                    plt.tight_layout()
+                    plt.savefig(out_png)
+                    plt.close(fig)
+                    print(f"saved chart: {out_png}")
+                except Exception as e:
+                    print(f"chart skipped: {e}")
+
+        # dataset means
+        if results:
+            mt = stats.mean([r["total_s_mean"] for r in results])
+            mk = stats.mean([r["t2c_s_mean"] for r in results])
+            print(f"[DATASET MEAN] total: {mt:.4f}s | t2c: {mk:.4f}s")
+
+        # save CSV
+        if results and save_csv:
+            pathlib.Path("bench").mkdir(exist_ok=True)
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            out_path = f"bench/pipeline_{ts}.csv"
+            with open(out_path, "w", newline="", encoding="utf-8") as f:
+                w = csv.DictWriter(f, fieldnames=list(results[0].keys()))
+                w.writeheader()
+                w.writerows(results)
+            print(f"saved: {out_path}")
+
+        return results
+    return (bench_pipeline_csv,)
+
+@app.cell
+def _(bench_pipeline_csv):
+    bench_pipeline_csv(
+        path="tests/questions.csv",
         db_path="nobel.kuzu",
-        question="Which scholars won prizes in Physics and were affiliated with University of Cambridge?",
-        runs=3,
+        runs=3
     )
     return ()
 
