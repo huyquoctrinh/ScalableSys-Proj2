@@ -1,4 +1,6 @@
+from pydoc import text
 import marimo
+import time
 
 __generated_with = "0.14.17"
 app = marimo.App(width="medium")
@@ -208,6 +210,7 @@ def _(
     Text2Cypher,
     dspy,
 ):
+    import time
     class GraphRAG(dspy.Module):
         """
         DSPy custom module that applies Text2Cypher to generate a query and run it
@@ -219,6 +222,45 @@ def _(
             self.text2cypher = dspy.ChainOfThought(Text2Cypher)
             self.generate_answer = dspy.ChainOfThought(AnswerQuestion)
 
+        def get_cypher_query(self, question: str, input_schema: str) -> Query:
+            prune_result = self.prune(question=question, input_schema=input_schema)
+            schema = prune_result.pruned_schema
+            text2cypher_result = self.text2cypher(question=question, input_schema=schema)
+            cypher_query = text2cypher_result.query
+            return cypher_query
+        
+        @staticmethod
+        def _default_token_counter(text: str) -> int:
+            """
+            Output token count (approx).
+            If tiktoken is installed, use it; else ~1 token per 4 chars.
+            """
+            try:
+                import tiktoken
+                enc = tiktoken.get_encoding("cl100k_base")
+                return len(enc.encode(text))
+            except Exception:
+                return max(1, len(text) // 4)
+
+        def measure_text2cypher(self, question: str, input_schema: str, token_counter=None) -> dict:
+            if token_counter is None:
+                token_counter = self._default_token_counter
+            t0 = time.perf_counter()
+            t2c = self.text2cypher(question=question, input_schema=input_schema)
+            elapsed = time.perf_counter() - t0
+            try:
+                query_str = t2c.query.query
+            except AttributeError:
+                query_str = getattr(t2c, "query", None) or str(t2c)
+            out_tok = token_counter(query_str)
+            tps = out_tok / elapsed if elapsed > 0 else float("inf")
+            return {
+                "query": query_str,
+                "t2c_time_s": elapsed,
+                "t2c_output_tokens": out_tok,
+                "t2c_tokens_per_s": tps,
+            }
+        
         def get_cypher_query(self, question: str, input_schema: str) -> Query:
             prune_result = self.prune(question=question, input_schema=input_schema)
             schema = prune_result.pruned_schema
@@ -288,6 +330,61 @@ def _(
 
     return (run_graph_rag,)
 
+@app.cell
+def _(GraphRAG, KuzuDatabaseManager):
+    def bench_t2c(db_path: str = "nobel.kuzu", question: str = None):
+        """
+        Headless-style timing for Text2Cypher only.
+        Prints one line with latency and throughput. Returns the metrics dict.
+        """
+        if question is None:
+            question = "Which scholars won prizes in Physics and were affiliated with University of Cambridge?"
+
+        dbm = KuzuDatabaseManager(db_path)
+        schema = str(dbm.get_schema_dict)
+        rag = GraphRAG()
+
+        m = rag.measure_text2cypher(question=question, input_schema=schema)
+        print(f"[T2C] {m['t2c_time_s']:.3f}s | {m['t2c_output_tokens']} tok | {m['t2c_tokens_per_s']:.2f} tok/s")
+        return m
+    return (bench_t2c,)
+
+@app.cell
+def _(bench_t2c):
+    import statistics as stats
+
+    def bench_t2c_stats(db_path: str = "nobel.kuzu",
+                        question: str | None = None,
+                        runs: int = 3):
+        times, tokens, tps = [], [], []
+        for i in range(runs):
+            m = bench_t2c(db_path=db_path, question=question)  # prints per-run line
+            times.append(m["t2c_time_s"])
+            tokens.append(m["t2c_output_tokens"])
+            tps.append(m["t2c_tokens_per_s"])
+
+        def mean_sd(xs):
+            mean = stats.mean(xs)
+            sd = stats.stdev(xs) if len(xs) > 1 else 0.0
+            return mean, sd
+
+        mt, sdt = mean_sd(times)
+        mk, sdk = mean_sd(tokens)
+        mr, sdr = mean_sd(tps)
+
+        print(f"[T2C][summary over {runs} runs] "
+              f"time: {mt:.4f}s ± {sdt:.4f}s | "
+              f"tokens: {mk:.2f} ± {sdk:.2f} | "
+              f"tokens/s: {mr:.2f} ± {sdr:.2f}")
+
+        return {
+            "runs": runs,
+            "per_run": {"time_s": times, "tokens": tokens, "tokens_per_s": tps},
+            "mean": {"time_s": mt, "tokens": mk, "tokens_per_s": mr},
+            "stdev": {"time_s": sdt, "tokens": sdk, "tokens_per_s": sdr},
+        }
+
+    return (bench_t2c_stats,)
 
 @app.cell
 def _():
@@ -321,6 +418,15 @@ def _():
         mo,
     )
 
+@app.cell
+def _(bench_t2c_stats):
+    # change question/db_path if needed
+    bench_t2c_stats(
+        db_path="nobel.kuzu",
+        question="Which scholars won prizes in Physics and were affiliated with University of Cambridge?",
+        runs=3,
+    )
+    return ()
 
 if __name__ == "__main__":
     app.run()
