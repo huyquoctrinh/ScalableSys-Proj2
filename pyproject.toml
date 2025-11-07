@@ -16,7 +16,13 @@ dependencies = [
     "pyarrow>=21.0.0",
     "python-dotenv>=1.1.1",
     "sentence-transformers>=2.2.2",
-    "pydantic>=2.7.1"
+    "pydantic>=2.7.1",
+    "torch",
+    "transformers",
+    "accelerate",
+    "scipy",
+    "google-auth",
+    "pandas"
 ]
 
 [tool.setuptools]

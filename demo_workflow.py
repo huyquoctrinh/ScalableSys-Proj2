@@ -119,15 +119,14 @@ def _(mo):
 def _(dspy, load_dotenv, os):
     load_dotenv()
 
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-
+    project_id = os.environ.get("VERTEX_AI_PROJECT_ID")  # e.g., "my-gcp-project"
+    location = os.environ.get("VERTEX_AI_LOCATION")  # e.g., "us-central1"
+     
     # Using OpenRouter. Switch to another LLM provider as needed
     # we recommend gemini-2.0-flash for the cost-efficiency
-    lm = dspy.LM(
-        model="openrouter/google/gemini-2.0-flash-001",
-        api_base="https://openrouter.ai/api/v1",
-        api_key=OPENROUTER_API_KEY,
-    )
+    # Configure DSPy to use a Vertex AI model
+    
+    lm = dspy.LM(model="vertex_ai/gemini-2.5-flash", project=project_id, location=location)
     dspy.configure(lm=lm)
     return
 
@@ -158,8 +157,8 @@ def _(BaseModel, Field):
 
     class Edge(BaseModel):
         label: str = Field(description="Relationship label")
-        from_: Node = Field(alias="from", description="Source node label")
-        to: Node = Field(alias="from", description="Target node label")
+        from_: str = Field(alias="from", description="Source node label")
+        to: str = Field(alias="to", description="Target node label")
         properties: list[Property] | None
 
     class GraphSchema(BaseModel):

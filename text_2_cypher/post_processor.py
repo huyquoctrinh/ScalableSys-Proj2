@@ -23,7 +23,7 @@ class CypherPostProcessor:
               → WHERE LOWER(s.name) CONTAINS 'cambridge'
         """
         # Pattern: property = 'string'
-        pattern = r"WHERE\s+(\w+)\.(\w+)\s*=\s*['"]([^'"]+)['"]"
+        pattern = r"WHERE\s+(\w+)\.(\w+)\s*=\s*(?:\"|')(.+?)(?:\"|')"
         
         def replacement(match):
             var, prop, value = match.groups()

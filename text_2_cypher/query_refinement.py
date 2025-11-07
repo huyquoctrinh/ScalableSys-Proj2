@@ -47,7 +47,7 @@ class QueryGenerator:
         self.conn = conn
         self.max_iterations = max_iterations
         self.text2cypher = text2cypher_predictor
-        self.repair = dspy.Predict(RepairCypher)
+        self.repair = dspy.ChainOfThought(RepairCypher)
     
     def generate_with_refinement(
         self, 
