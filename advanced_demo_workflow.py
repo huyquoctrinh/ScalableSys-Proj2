@@ -37,13 +37,19 @@ def _(kuzu):
 
 
 @app.cell
-def _(dspy, load_dotenv, os):
+def _(BAMLAdapter, dspy, load_dotenv, os):
     load_dotenv()
-    project_id = os.environ.get("VERTEX_AI_PROJECT_ID")
-    location = os.environ.get("VERTEX_AI_LOCATION")
-    lm = dspy.LM(model="vertex_ai/gemini-2.5-flash", project=project_id, location=location)
-    dspy.configure(lm=lm)
-    return lm
+    
+    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+    
+    # Using OpenRouter with Gemini 2.0 Flash for cost-efficiency
+    lm = dspy.LM(
+        model="openrouter/google/gemini-2.0-flash-001",
+        api_base="https://openrouter.ai/api/v1",
+        api_key=OPENROUTER_API_KEY,
+    )
+    dspy.configure(lm=lm, adapter=BAMLAdapter())
+    return (lm, OPENROUTER_API_KEY)
 
 
 @app.cell(hide_code=True)
@@ -368,6 +374,7 @@ def _():
     from typing import Any
     from pydantic import BaseModel, Field
     from dotenv import load_dotenv
+    from dspy.adapters.baml_adapter import BAMLAdapter
     from text_2_cypher import (
         ExemplarSelector,
         QueryGenerator,
@@ -376,6 +383,7 @@ def _():
     from cache_method import LRUDataManager
     return (
         Any,
+        BAMLAdapter,
         BaseModel,
         CypherPostProcessor,
         ExemplarSelector,

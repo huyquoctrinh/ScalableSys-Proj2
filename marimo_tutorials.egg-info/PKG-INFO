@@ -25,8 +25,9 @@ Source code for course project to build a Graph RAG with Kuzu, [DSPy](https://ds
 
 ## Setup
 
-We recommend using the `uv` package manager
-to manage dependencies.
+### 1. Install Dependencies
+
+We recommend using the `uv` package manager to manage dependencies.
 
 ```bash
 # Uses the local pyproject.toml to add dependencies
@@ -36,6 +37,16 @@ uv add marimo dspy kuzu polars pyarrow
 # Don't forget to source virtual env
 source .venv/bin/activate
 ```
+
+### 2. Configure API Keys
+
+Create a `.env` file in the project root with your OpenRouter API key:
+
+```bash
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+```
+
+See [ENV_CONFIG.md](ENV_CONFIG.md) for detailed configuration instructions.
 
 ### Start Kuzu Database
 ```bash
