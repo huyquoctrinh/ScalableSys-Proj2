@@ -154,36 +154,59 @@ def process_question(
     post_processor,
     answer_generator_module,
 ) -> list[str]:
-    """Handles the processing of a single user question with efficient caching of the final answer."""
+    """Handles the processing of a single user question with two-level caching: first for the final answer, then for the generated Cypher query."""
     output = []
     output.append(f"\nProcessing question: {question}\n")
 
-    # === 1. Prune Schema and Generate Cache Key ===
+    # === 1. Prune Schema and Generate Cache Keys ===
     input_schema = get_schema_dict_func(conn)
     pruned_schema_result = prune_module(question=question, input_schema=json.dumps(input_schema, indent=2))
     pruned_schema = pruned_schema_result.pruned_schema.model_dump()
     schema_str = json.dumps(pruned_schema, sort_keys=True)
-    cache_key = f"{question}|{schema_str}"
-    hashed_key = lru_cache_manager._hash(cache_key)
+    base_cache_key = f"{question}|{schema_str}"
+    
+    answer_cache_key = f"answer|{base_cache_key}"
+    hashed_answer_key = lru_cache_manager._hash(answer_cache_key)
 
     # === 2. Check Cache for Final Answer ===
-    cached_answer = lru_cache_manager.get_data(hashed_key)
-
+    cached_answer = lru_cache_manager.get_data(hashed_answer_key)
     if cached_answer:
-        output.append("Cache Status: HIT")
+        output.append("Answer Cache Status: HIT")
         output.append(f"\nFinal Answer:\n> {cached_answer}")
         return output
-
-    # === 3. Cache Miss: Run Full Pipeline ===
-    output.append("Cache Status: MISS")
     
-    # --- a. Generate and Process Query ---
-    top_k_exemplars = exemplar_selector.select_top_k(question, k=2)
-    generated_query, query_history = query_generator.generate_with_refinement(
-        question=question, schema=json.dumps(pruned_schema, indent=2), examples=str(top_k_exemplars)
-    )
-    final_query = post_processor.process(generated_query)
-    applied_rules = post_processor.get_applied_rules()
+    output.append("Answer Cache Status: MISS")
+
+    # === 3. Check Cache for Cypher Query ===
+    query_cache_key = f"query|{base_cache_key}"
+    hashed_query_key = lru_cache_manager._hash(query_cache_key)
+    cached_query_data = lru_cache_manager.get_data(hashed_query_key)
+
+    query_history = []
+    applied_rules = []
+
+    if cached_query_data:
+        output.append("Cypher Query Cache Status: HIT")
+        final_query = cached_query_data["query"]
+        query_history = cached_query_data.get("history", [])
+        applied_rules = cached_query_data.get("rules", [])
+    else:
+        output.append("Cypher Query Cache Status: MISS")
+        # --- a. Generate and Process Query ---
+        top_k_exemplars = exemplar_selector.select_top_k(question, k=2)
+        generated_query, query_history = query_generator.generate_with_refinement(
+            question=question, schema=json.dumps(pruned_schema, indent=2), examples=str(top_k_exemplars)
+        )
+        final_query = post_processor.process(generated_query)
+        applied_rules = post_processor.get_applied_rules()
+
+        # Store the generated query and metadata in the cache
+        query_to_cache = {
+            "query": final_query,
+            "history": query_history,
+            "rules": applied_rules,
+        }
+        lru_cache_manager.set_data(hashed_query_key, query_to_cache)
 
     output.append(f"\nFinal Cypher Query:\n{final_query}")
     if applied_rules:
@@ -214,7 +237,7 @@ def process_question(
         output.append(f"\nFinal Answer:\n> {final_answer}")
         
         # Store the final answer in the cache
-        lru_cache_manager.set_data(hashed_key, final_answer)
+        lru_cache_manager.set_data(hashed_answer_key, final_answer)
     
     return output
 
