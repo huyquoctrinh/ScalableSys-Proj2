@@ -1,0 +1,58 @@
+[
+  {
+    "question": "Who were the mentors of Marie Curie?",
+    "query": "MATCH (s1:Scholar {knownName: 'Marie Curie'})<-[:MENTORED]-(s2:Scholar) RETURN s2.knownName"
+  },
+  {
+    "question": "Which prizes did Albert Einstein win?",
+    "query": "MATCH (s:Scholar {knownName: 'Albert Einstein'})-[:AWARDED_PRIZE]->(p:Prize) RETURN p.category, p.awardYear"
+  },
+  {
+    "question": "How many scholars are from Germany?",
+    "query": "MATCH (s:Scholar)-[:BORN_IN]->(c:Country {name: 'Germany'}) RETURN count(s)"
+  },
+  {
+    "question": "List scholars affiliated with University of Cambridge.",
+    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution {name: 'University of Cambridge'}) RETURN s.knownName"
+  },
+  {
+    "question": "Who are the 5 most recently awarded scholars in Chemistry?",
+    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize {category: 'Chemistry'}) RETURN s.knownName, p.awardYear ORDER BY p.awardYear DESC LIMIT 5"
+  },
+  {
+    "question": "How many Nobel laureates were born in the USA?",
+    "query": "MATCH (s:Scholar)-[:BORN_IN]->(c:Country {name: 'USA'}) RETURN count(s)"
+  },
+  {
+    "question": "List all prizes won by 'Max Planck'.",
+    "query": "MATCH (s:Scholar {knownName: 'Max Planck'})-[:WON]->(p:Prize) RETURN p.category, p.awardYear"
+  },
+  {
+    "question": "Which scholars were mentored by someone who won a prize in Physics?",
+    "query": "MATCH (s1:Scholar)<-[:MENTORED]-(s2:Scholar)-[:WON]->(p:Prize {category: 'Physics'}) RETURN s1.knownName"
+  },
+  {
+    "question": "Find scholars who were born in one country and died in another.",
+    "query": "MATCH (s:Scholar)-[:BORN_IN]->(c1:Country), (s)-[:DIED_IN]->(c2:Country) WHERE c1 <> c2 RETURN s.knownName, c1.name, c2.name"
+  },
+  {
+    "question": "What is the total prize amount awarded for the Economics prize in 1999?",
+    "query": "MATCH (p:Prize {category: 'Economics', awardYear: 1999}) RETURN sum(p.prizeAmount)"
+  },
+  {
+    "question": "List institutions in the United Kingdom.",
+    "query": "MATCH (i:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country {name: 'United Kingdom'}) RETURN i.name"
+  },
+  {
+    "question": "Who are the scholars affiliated with ETH Zurich?",
+    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution {name: 'ETH Zurich'}) RETURN s.knownName"
+  },
+  {
+    "question": "Find female scholars who won a prize in Medicine.",
+    "query": "MATCH (s:Scholar {gender: 'female'})-[:WON]->(p:Prize {category: 'Medicine'}) RETURN s.knownName"
+  },
+  {
+    "question": "Which country has the most Nobel laureates affiliated with its institutions?",
+    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country) RETURN c.name, count(s) AS laureateCount ORDER BY laureateCount DESC LIMIT 1"
+  }
+]
