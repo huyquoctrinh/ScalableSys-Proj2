@@ -1,110 +1,42 @@
 [
-  {
-    "question": "Which scholars were affiliated with an institution in Cambridge?",
-    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution)-[:IS_LOCATED_IN]->(c:City) WHERE c.name CONTAINS 'Cambridge' RETURN s.knownName"
-  },
-  {
-    "question": "Which prizes did Albert Einstein win?",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE s.knownName CONTAINS 'Einstein' RETURN p.category, p.awardYear"
-  },
-  {
-    "question": "How many scholars are from Germany?",
-    "query": "MATCH (s:Scholar)-[:BORN_IN]->(:City)-[:IS_CITY_IN]->(c:Country) WHERE c.name CONTAINS 'Germany' RETURN count(s)"
-  },
-  {
-    "question": "List scholars affiliated with University of Cambridge.",
-    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE i.name CONTAINS 'University of Cambridge' RETURN s.knownName"
-  },
-  {
-    "question": "Who are the 5 most recently awarded scholars in Chemistry?",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.category CONTAINS 'chemistry' RETURN s.knownName, p.awardYear ORDER BY p.awardYear DESC LIMIT 5"
-  },
-  {
-    "question": "How many Nobel laureates were born in the USA?",
-    "query": "MATCH (s:Scholar)-[:BORN_IN]->(:City)-[:IS_CITY_IN]->(c:Country) WHERE c.name CONTAINS 'USA' RETURN count(s)"
-  },
-  {
-    "question": "List all prizes won by 'Max Planck'.",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE s.knownName CONTAINS 'Max Planck' RETURN p.category, p.awardYear"
-  },
-  {
-    "question": "Which scholars were affiliated with an institution that is located in a country where a prize winner was born?",
-    "query": "MATCH (s1:Scholar)-[:AFFILIATED_WITH]->(i:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country), (s2:Scholar)-[:BORN_IN]->(:City)-[:IS_CITY_IN]->(c) RETURN DISTINCT s1.knownName"
-  },
-  {
-    "question": "Find scholars who were born in one country and affiliated with an institution in another.",
-    "query": "MATCH (s:Scholar)-[:BORN_IN]->(:City)-[:IS_CITY_IN]->(c1:Country), (s)-[:AFFILIATED_WITH]->(:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c2:Country) WHERE c1.name <> c2.name RETURN s.knownName, c1.name AS birthCountry, c2.name AS affiliationCountry"
-  },
-  {
-    "question": "What is the total prize amount awarded for the Economics prize in 1999?",
-    "query": "MATCH (p:Prize) WHERE p.category CONTAINS 'economics' AND p.awardYear = 1999 RETURN sum(p.prizeAmount)"
-  },
-  {
-    "question": "List institutions in the United Kingdom.",
-    "query": "MATCH (i:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country) WHERE c.name CONTAINS 'United Kingdom' RETURN i.name"
-  },
-  {
-    "question": "Who are the scholars affiliated with an institution in Zurich?",
-    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution)-[:IS_LOCATED_IN]->(c:City) WHERE c.name CONTAINS 'Zurich' RETURN s.knownName"
-  },
-  {
-    "question": "Find female scholars who won a prize in Medicine.",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE s.gender = 'female' AND p.category CONTAINS 'medicine' RETURN s.knownName"
-  },
-  {
-    "question": "Which country has the most Nobel laureates affiliated with its institutions?",
-    "query": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country) RETURN c.name, count(s) AS laureateCount ORDER BY laureateCount DESC LIMIT 1"
-  },
-  {
-    "question": "Which scholars won a prize in Physics in 2000?",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.category CONTAINS 'physics' AND p.awardYear = 2000 RETURN s.knownName"
-  },
-  {
-    "question": "List all institutions in France.",
-    "query": "MATCH (i:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country) WHERE c.name CONTAINS 'France' RETURN i.name"
-  },
-  {
-    "question": "How many female scholars won a prize in Chemistry?",
-    "query": "MATCH (s:Scholar {gender: 'female'})-[:WON]->(p:Prize) WHERE p.category CONTAINS 'chemistry' RETURN count(s)"
-  },
-  {
-    "question": "Find scholars who were born in a city in Europe.",
-    "query": "MATCH (s:Scholar)-[:BORN_IN]->(:City)-[:IS_CITY_IN]->(:Country)-[:IS_COUNTRY_IN]->(con:Continent) WHERE con.name CONTAINS 'Europe' RETURN s.knownName"
-  },
-  {
-    "question": "What is the average prize amount for the Literature category?",
-    "query": "MATCH (p:Prize) WHERE p.category CONTAINS 'literature' RETURN avg(p.prizeAmount)"
-  },
-  {
-    "question": "List all prizes awarded in the 21st century.",
-    "query": "MATCH (p:Prize) WHERE p.awardYear >= 2001 RETURN p.category, p.awardYear, p.motivation"
-  },
-  {
-    "question": "Who won the Nobel Peace Prize in 2005?",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.category CONTAINS 'peace' AND p.awardYear = 2005 RETURN s.knownName"
-  },
-  {
-    "question": "Find scholars who died in the same city they were born in.",
-    "query": "MATCH (s:Scholar)-[:BORN_IN]->(bc:City), (s)-[:DIED_IN]->(dc:City) WHERE bc.name = dc.name RETURN s.knownName, bc.name AS City"
-  },
-  {
-    "question": "Which countries have institutions affiliated with scholars who won a prize in Medicine?",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.category CONTAINS 'medicine' MATCH (s)-[:AFFILIATED_WITH]->(:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country) RETURN DISTINCT c.name"
-  },
-  {
-    "question": "How many scholars won a prize before 1950?",
-    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.awardYear < 1950 RETURN count(DISTINCT s)"
-  },
-  {
-    "question": "List scholars who won a prize in both Physics and Chemistry.",
-    "query": "MATCH (s:Scholar)-[:WON]->(p1:Prize) WHERE p1.category CONTAINS 'physics' MATCH (s)-[:WON]->(p2:Prize) WHERE p2.category CONTAINS 'chemistry' RETURN DISTINCT s.knownName"
-  },
-  {
-    "question": "What is the motivation for the prize won by Marie Curie?",
-    "query": "MATCH (s:Scholar {knownName: 'Marie Curie'})-[:WON]->(p:Prize) RETURN p.motivation"
-  },
-  {
-    "question": "Which institution is Albert Einstein affiliated with?",
-    "query": "MATCH (s:Scholar {knownName: 'Albert Einstein'})-[:AFFILIATED_WITH]->(i:Institution) RETURN i.name"
-  }
+    {
+        "question": "Which scholars won prizes in Physics?",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE LOWER(p.category) = 'physics' RETURN s.knownName",
+        "category": "simple_filter"
+    },
+    {
+        "question": "Who was affiliated with University of Cambridge?",
+        "cypher": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'cambridge' RETURN s.knownName",
+        "category": "institution_affiliation"
+    },
+    {
+        "question": "How many laureates won prizes in Chemistry between 1950 and 2000?",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE LOWER(p.category) = 'chemistry' AND p.awardYear >= 1950 AND p.awardYear <= 2000 RETURN count(DISTINCT s)",
+        "category": "aggregation_with_date_range"
+    },
+    {
+        "question": "Which Physics laureates were born in the United States?",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize), (s)-[:BORN_IN]->(c:City)-[:IS_CITY_IN]->(co:Country) WHERE LOWER(p.category) = 'physics' AND LOWER(co.name) CONTAINS 'united states' RETURN s.knownName, c.name",
+        "category": "multi_hop"
+    },
+    {
+        "question": "List all female laureates in Medicine",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE LOWER(p.category) = 'medicine' AND LOWER(s.gender) = 'female' RETURN s.knownName, p.awardYear",
+        "category": "gender_filter"
+    },
+    {
+        "question": "What is the average prize amount for Economics?",
+        "cypher": "MATCH (p:Prize) WHERE LOWER(p.category) = 'economics' RETURN AVG(p.prizeAmount)",
+        "category": "aggregation"
+    },
+    {
+        "question": "List scholars affiliated with MIT",
+        "cypher": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'mit' RETURN s.knownName",
+        "category": "institution_simple"
+    },
+    {
+        "question": "How many prizes were awarded after 2010?",
+        "cypher": "MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)",
+        "category": "date_filter"
+    }
 ]

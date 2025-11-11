@@ -285,22 +285,28 @@ def _(
             self, db_manager: KuzuDatabaseManager, question: str, input_schema: str
         ) -> tuple[str, list[Any] | None]:
             """
-            Run a query synchronously on the database.
+            Run a query synchronously on the database with LRU caching.
+            Cache key includes both question and schema for accuracy.
             """
-            cached_result = self.cache_manager.get_data(question)
+            # Create cache key from question and input schema
+            import json
+            cache_key = f"{question}|{json.dumps(input_schema, sort_keys=True)}"
+            
+            cached_result = self.cache_manager.get_data(cache_key)
             if cached_result:
-                print("Cache hit!")
+                print("✓ Cache hit! Using cached query and results.")
                 return cached_result["query"], cached_result["results"]
 
-            print("Cache miss!")
+            print("✗ Cache miss. Generating new query...")
             query = self.get_cypher_query(question=question, input_schema=input_schema)
             try:
                 # Run the query on the database
                 result = db_manager.conn.execute(query)
                 results = [item for row in result for item in row]
-                self.cache_manager.set_data(question, {"query": query, "results": results})
+                self.cache_manager.set_data(cache_key, {"query": query, "results": results})
+                print(f"✓ Query cached. Cache size: {len(self.cache_manager.cache)}/{self.cache_manager.cache.maxsize}")
             except RuntimeError as e:
-                print(f"Error running query: {e}")
+                print(f"✗ Error running query: {e}")
                 results = None
             return query, results
 
