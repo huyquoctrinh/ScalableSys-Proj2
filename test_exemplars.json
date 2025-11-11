@@ -1,0 +1,30 @@
+[
+  {
+    "question": "Who won the Nobel Peace Prize in 2005?",
+    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.category CONTAINS 'peace' AND p.awardYear = 2005 RETURN s.knownName"
+  },
+  {
+    "question": "Find scholars who died in the same city they were born in.",
+    "query": "MATCH (s:Scholar)-[:BORN_IN]->(bc:City), (s)-[:DIED_IN]->(dc:City) WHERE bc.name = dc.name RETURN s.knownName, bc.name AS City"
+  },
+  {
+    "question": "Which countries have institutions affiliated with scholars who won a prize in Medicine?",
+    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.category CONTAINS 'medicine' MATCH (s)-[:AFFILIATED_WITH]->(:Institution)-[:IS_LOCATED_IN]->(:City)-[:IS_CITY_IN]->(c:Country) RETURN DISTINCT c.name"
+  },
+  {
+    "question": "How many scholars won a prize before 1950?",
+    "query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.awardYear < 1950 RETURN count(DISTINCT s)"
+  },
+  {
+    "question": "List scholars who won a prize in both Physics and Chemistry.",
+    "query": "MATCH (s:Scholar)-[:WON]->(p1:Prize) WHERE p1.category CONTAINS 'physics' MATCH (s)-[:WON]->(p2:Prize) WHERE p2.category CONTAINS 'chemistry' RETURN DISTINCT s.knownName"
+  },
+  {
+    "question": "What is the motivation for the prize won by Marie Curie?",
+    "query": "MATCH (s:Scholar {knownName: 'Marie Curie'})-[:WON]->(p:Prize) RETURN p.motivation"
+  },
+  {
+    "question": "Which institution is Albert Einstein affiliated with?",
+    "query": "MATCH (s:Scholar {knownName: 'Albert Einstein'})-[:AFFILIATED_WITH]->(i:Institution) RETURN i.name"
+  }
+]
