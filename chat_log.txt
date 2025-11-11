@@ -1,0 +1,247 @@
+
+--- Session started at 2025-11-11T16:08:23.910002 ---
+
+> What is the average prize amount for Economics?
+An unexpected error occurred: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google/gemini-flash-1.5
+ Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers
+
+No queries processed yet.
+--- Session ended abruptly at 2025-11-11T16:09:17.667806 ---
+
+--- Session started at 2025-11-11T16:10:01.958055 ---
+
+> What is the average prize amount for Economics?
+
+============================================================
+❓ QUESTION: What is the average prize amount for Economics?
+============================================================
+
+❌ Cache Status: MISS
+
+Final Cypher Query:
+MATCH (p:Prize) WHERE LOWER(p.category) = 'economics' RETURN AVG(p.prizeAmount)
+Post-processing Rules Applied: ['clean_whitespace']
+Query Generation History:
+  - Attempt 1: MATCH (p:Prize) WHERE LOWER(p.category) = 'economics' RETURN AVG(p.prizeAmount)
+
+--- Running Query and Generating Answer ---
+
+Query Result:
+[np.float64(5618037.735849056)]
+
+⏱️  Total Processing Time: 6.910s
+📦 Cache Size: 1/128
+
+💡 ANSWER:
+The average prize amount for Economics is 5618037.74.
+
+> What is the prize usually granted for Economics?
+
+============================================================
+❓ QUESTION: What is the prize usually granted for Economics?
+============================================================
+
+❌ Cache Status: MISS
+
+Final Cypher Query:
+MATCH (p:Prize) WHERE LOWER(p.category) = 'economics' RETURN p.prizeAmount
+Post-processing Rules Applied: ['clean_whitespace']
+Query Generation History:
+  - Attempt 1: MATCH (p:Prize) WHERE LOWER(p.category) = 'economics' RETURN p.prizeAmount
+
+--- Running Query and Generating Answer ---
+
+Query Result:
+[np.int64(9000000), np.int64(8000000), np.int64(7600000), np.int64(8000000), np.int64(10000000), np.int64(8000000), np.int64(700000), np.int64(10000000), np.int64(10000000), np.int64(10000000), np.int64(10000000), np.int64(9000000), np.int64(10000000), np.int64(6700000), np.int64(10000000), np.int64(10000000), np.int64(10000000), np.int64(10000000), np.int64(8000000), np.int64(1800000), np.int64(550000), np.int64(6500000), np.int64(1150000), np.int64(1500000), np.int64(4000000), np.int64(725000), np.int64(7400000), np.int64(2000000), np.int64(1000000), np.int64(375000), np.int64(8000000), np.int64(7000000), np.int64(480000), np.int64(880000), np.int64(630000), np.int64(2500000), np.int64(681000), np.int64(7500000), np.int64(400000), np.int64(10000000), np.int64(9000000), np.int64(10000000), np.int64(9000000), np.int64(1650000), np.int64(7200000), np.int64(10000000), np.int64(2175000), np.int64(7900000), np.int64(6000000), np.int64(450000), np.int64(800000), np.int64(3000000), np.int64(510000)]
+
+⏱️  Total Processing Time: 5.489s
+📦 Cache Size: 2/128
+
+💡 ANSWER:
+The average prize amount for Economics is 6,296,851.85.
+
+> What is the average prize amount for Economics?
+
+============================================================
+❓ QUESTION: What is the average prize amount for Economics?
+============================================================
+
+✅ Cache Status: HIT
+⚡ Response Time: 0.011s
+📦 Cache Size: 2/128
+
+💡 ANSWER:
+The average prize amount for Economics is 5618037.74.
+
+
+============================================================
+📊 CACHE PERFORMANCE BENCHMARK
+============================================================
+Total Queries:        3
+Cache Hits:           1 (33.3%)
+Cache Misses:         2 (66.7%)
+⚡ Avg Hit Time:      0.011s
+🐌 Avg Miss Time:     6.200s
+🚀 Speedup (cached):  553.3x faster
+⏱️  Total Time Saved:  0.00s
+💰 Estimated Cost Saved: $0.0020
+============================================================
+--- Session ended abruptly at 2025-11-11T16:15:12.472246 ---
+
+--- Session started at 2025-11-11T16:15:24.314952 ---
+
+> MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+
+============================================================
+❓ QUESTION: MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+============================================================
+
+❌ Cache Status: MISS
+
+Final Cypher Query:
+MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+Post-processing Rules Applied: ['clean_whitespace']
+Query Generation History:
+  - Attempt 1: MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+
+--- Running Query and Generating Answer ---
+
+📊 Database Retrieval Results:
+   • Rows retrieved: 1
+   • Execution time: 0.001s
+   • Columns: COUNT(p._ID)
+
+Query Result:
+[np.int64(48)]
+
+⏱️  Total Processing Time: 4.746s
+   • DB Query: 0.001s
+   • Answer Gen: 1.074s
+📦 Cache Size: 1/128
+
+💡 ANSWER:
+48
+
+> How many prizes were awarded after 2010?
+
+============================================================
+❓ QUESTION: How many prizes were awarded after 2010?
+============================================================
+
+❌ Cache Status: MISS
+
+Final Cypher Query:
+MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+Post-processing Rules Applied: ['clean_whitespace']
+Query Generation History:
+  - Attempt 1: MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+
+--- Running Query and Generating Answer ---
+
+📊 Database Retrieval Results:
+   • Rows retrieved: 1
+   • Execution time: 0.001s
+   • Columns: COUNT(p._ID)
+
+Query Result:
+[np.int64(48)]
+
+⏱️  Total Processing Time: 6.616s
+   • DB Query: 0.001s
+   • Answer Gen: 1.506s
+📦 Cache Size: 2/128
+
+💡 ANSWER:
+48 prizes were awarded after 2010.
+
+> How many prizes awarded after 2010?
+
+============================================================
+❓ QUESTION: How many prizes awarded after 2010?
+============================================================
+
+❌ Cache Status: MISS
+
+Final Cypher Query:
+MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+Post-processing Rules Applied: ['clean_whitespace']
+Query Generation History:
+  - Attempt 1: MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)
+
+--- Running Query and Generating Answer ---
+
+📊 Database Retrieval Results:
+   • Rows retrieved: 1
+   • Execution time: 0.002s
+   • Columns: COUNT(p._ID)
+
+Query Result:
+[np.int64(48)]
+
+⏱️  Total Processing Time: 5.588s
+   • DB Query: 0.002s
+   • Answer Gen: 0.999s
+📦 Cache Size: 3/128
+
+💡 ANSWER:
+There were 48 prizes awarded after 2010.
+
+> How many prizes were awarded after 2010?
+
+============================================================
+❓ QUESTION: How many prizes were awarded after 2010?
+============================================================
+
+✅ Cache Status: HIT
+⚡ Response Time: 0.023s
+📦 Cache Size: 3/128
+
+💡 ANSWER:
+48 prizes were awarded after 2010.
+
+> MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'mit' RETURN s.knownName
+
+============================================================
+❓ QUESTION: MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'mit' RETURN s.knownName
+============================================================
+
+❌ Cache Status: MISS
+
+Final Cypher Query:
+MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'mit' RETURN s.knownName
+Post-processing Rules Applied: ['clean_whitespace']
+Query Generation History:
+  - Attempt 1: MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'mit' RETURN s.knownName
+
+--- Running Query and Generating Answer ---
+
+📊 Database Retrieval Results:
+   • Rows retrieved: 23
+   • Execution time: 0.002s
+   • Columns: s.knownName
+
+Query Result:
+['Joshua D. Angrist', 'Mario J. Molina', 'Rainer Weiss', 'Esther Duflo', 'Robert M. Solow', 'Wolfgang Ketterle', 'Henry W. Kendall', 'Susumu Tonegawa', 'Abhijit Banerjee', 'Franco Modigliani', 'Salvador E. Luria', 'Bengt Holmström', 'Samuel C.C. Ting', 'H. Robert Horvitz', 'Charles H. Townes', 'Frank Wilczek', 'Phillip A. Sharp', 'David Baltimore', 'Peter A. Diamond', 'Jerome I. Friedman', 'Richard R. Schrock', 'Clifford G. Shull', 'Paul A. Samuelson']
+
+⏱️  Total Processing Time: 11.058s
+   • DB Query: 0.002s
+   • Answer Gen: 2.092s
+📦 Cache Size: 4/128
+
+💡 ANSWER:
+Joshua D. Angrist, Mario J. Molina, Rainer Weiss, Esther Duflo, Robert M. Solow, Wolfgang Ketterle, Henry W. Kendall, Susumu Tonegawa, Abhijit Banerjee, Franco Modigliani, Salvador E. Luria, Bengt Holmström, Samuel C.C. Ting, H. Robert Horvitz, Charles H. Townes, Frank Wilczek, Phillip A. Sharp, David Baltimore, Peter A. Diamond, Jerome I. Friedman, Richard R. Schrock, Clifford G. Shull, Paul A. Samuelson
+
+
+============================================================
+📊 CACHE PERFORMANCE BENCHMARK
+============================================================
+Total Queries:        5
+Cache Hits:           1 (20.0%)
+Cache Misses:         4 (80.0%)
+⚡ Avg Hit Time:      0.023s
+🐌 Avg Miss Time:     7.002s
+🚀 Speedup (cached):  304.0x faster
+⏱️  Total Time Saved:  7.00s
+💰 Estimated Cost Saved: $0.0020
+============================================================
+--- Session ended abruptly at 2025-11-11T16:19:29.912771 ---
