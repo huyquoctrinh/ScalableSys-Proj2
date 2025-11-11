@@ -4,8 +4,9 @@ Source code for course project to build a Graph RAG with Kuzu, [DSPy](https://ds
 
 ## Setup
 
-We recommend using the `uv` package manager
-to manage dependencies.
+### 1. Install Dependencies
+
+We recommend using the `uv` package manager to manage dependencies.
 
 ```bash
 # Uses the local pyproject.toml to add dependencies
@@ -15,6 +16,16 @@ uv add marimo dspy kuzu polars pyarrow
 # Don't forget to source virtual env
 source .venv/bin/activate
 ```
+
+### 2. Configure API Keys
+
+Create a `.env` file in the project root with your OpenRouter API key:
+
+```bash
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+```
+
+See [ENV_CONFIG.md](ENV_CONFIG.md) for detailed configuration instructions.
 
 ### Start Kuzu Database
 ```bash
@@ -92,10 +103,24 @@ understand and modify each part of the process in marimo.
 
 ### Run the Graph RAG app
 
-A demo app is provided in `graph_rag.py` for reference. It's very basic (just question-answering), but the
-idea is general and this can be extended to include advanced retrieval workflows (vector + graph),
-interactive graph visualizations via anywidget, and more. More on this in future tutorials!
+#### Option 1: Interactive Marimo App (Recommended for UI)
 
 ```bash
 uv run marimo run graph_rag.py
 ```
+
+A demo app is provided in `graph_rag.py` for reference. It includes a web UI for interactive question-answering with all the advanced features (cache, exemplar selection, query refinement, post-processing).
+
+#### Option 2: Command-Line with Benchmarking (Recommended for Performance Testing)
+
+```bash
+python graph_rag_workflow.py
+```
+
+This runs a command-line interface with built-in LRU cache benchmarking:
+- ✅ **Real-time performance metrics** - See cache hit/miss rates
+- ✅ **Automatic timing** - Track query response times
+- ✅ **Statistics command** - Type `stats` anytime to see benchmark report
+- ✅ **Session logging** - All queries and results saved to `chat_log.txt`
+
+See **[BENCHMARK_GUIDE.md](BENCHMARK_GUIDE.md)** for detailed benchmarking instructions.

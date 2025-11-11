@@ -23,14 +23,14 @@ class CypherPostProcessor:
               → WHERE LOWER(s.name) CONTAINS 'cambridge'
         """
         # Pattern: property = 'string'
-        pattern = r"WHERE\s+(\w+)\.(\w+)\s*=\s*(?:\"|')(.+?)(?:\"|')"
+        pattern = r"(\w+)\.(\w+)\s*=\s*(?:\"|')(.+?)(?:\"|')"
         
         def replacement(match):
             var, prop, value = match.groups()
             # Only apply to name-like properties
             if prop.lower() in ['name', 'knownname', 'fullname']:
                 self.rules_applied.append(f"lowercase_contains: {match.group(0)}")
-                return f"WHERE LOWER({var}.{prop}) CONTAINS '{value.lower()}'"
+                return f"LOWER({var}.{prop}) CONTAINS '{value.lower()}'"
             return match.group(0)
         
         return re.sub(pattern, replacement, query, flags=re.IGNORECASE)
@@ -86,8 +86,16 @@ class CypherPostProcessor:
         Rule 4: Fix common property name mistakes
         Based on actual schema from the project
         """
+        # Heuristically find scholar variables and fix .name to .knownName
+        scholar_vars = re.findall(r'\((\w+):Scholar\)', query)
+        for var in scholar_vars:
+            pattern = rf'{var}\.name\b'
+            if re.search(pattern, query):
+                self.rules_applied.append(f"fix_property: {pattern} -> {var}.knownName")
+                query = re.sub(pattern, f'{var}.knownName', query)
+
         corrections = {
-            r'\.name\b(?=.*Scholar)': '.knownName',  # Scholar nodes use knownName
+            # r'\.name\b(?=.*Scholar)': '.knownName',  # This was buggy
             r'\.amount\b': '.prizeAmount',           # Prize amount property
             r'\.year\b': '.awardYear',               # Award year property
         }
