@@ -1,0 +1,16 @@
+question,tag
+List the Physics laureates in 1921.,single_hop
+Which laureates have won more than one Nobel Prize?,aggregation
+Which laureates were affiliated with University of Cambridge?,two_hop
+How many laureates were born in Germany?,aggregation
+List Chemistry laureates after 2000.,filter
+Which institutions in the USA have affiliated Nobel laureates in Physiology or Medicine?,two_hop
+List laureates born in cities within France.,two_hop
+Which Peace laureates were affiliated with organizations in Switzerland?,two_hop
+Top 3 countries by number of laureates.,aggregation
+List Economic Sciences laureates in the 2010s.,filter
+Which laureates were born on the continent of Asia?,two_hop
+Which laureates affiliated with MIT won Physics between 1950 and 2000?,filter_two_hop
+Which laureates have affiliations in Cambridge AND Oxford?,boolean_two_hop
+List laureates who won both Physics and Chemistry.,set_intersection
+Which institutions in Germany have more than 3 Nobel laureates?,group_agg
