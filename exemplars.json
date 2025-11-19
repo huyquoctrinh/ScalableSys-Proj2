@@ -1,0 +1,42 @@
+[
+    {
+        "question": "Which scholars won prizes in Physics?",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE LOWER(p.category) = 'physics' RETURN s.knownName",
+        "category": "simple_filter"
+    },
+    {
+        "question": "Who was affiliated with University of Cambridge?",
+        "cypher": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'cambridge' RETURN s.knownName",
+        "category": "institution_affiliation"
+    },
+    {
+        "question": "How many laureates won prizes in Chemistry between 1950 and 2000?",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE LOWER(p.category) = 'chemistry' AND p.awardYear >= 1950 AND p.awardYear <= 2000 RETURN count(DISTINCT s)",
+        "category": "aggregation_with_date_range"
+    },
+    {
+        "question": "Which Physics laureates were born in the United States?",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize), (s)-[:BORN_IN]->(c:City)-[:IS_CITY_IN]->(co:Country) WHERE LOWER(p.category) = 'physics' AND LOWER(co.name) CONTAINS 'united states' RETURN s.knownName, c.name",
+        "category": "multi_hop"
+    },
+    {
+        "question": "List all female laureates in Medicine",
+        "cypher": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE LOWER(p.category) = 'medicine' AND LOWER(s.gender) = 'female' RETURN s.knownName, p.awardYear",
+        "category": "gender_filter"
+    },
+    {
+        "question": "What is the average prize amount for Economics?",
+        "cypher": "MATCH (p:Prize) WHERE LOWER(p.category) = 'economics' RETURN AVG(p.prizeAmount)",
+        "category": "aggregation"
+    },
+    {
+        "question": "List scholars affiliated with MIT",
+        "cypher": "MATCH (s:Scholar)-[:AFFILIATED_WITH]->(i:Institution) WHERE LOWER(i.name) CONTAINS 'mit' RETURN s.knownName",
+        "category": "institution_simple"
+    },
+    {
+        "question": "How many prizes were awarded after 2010?",
+        "cypher": "MATCH (p:Prize) WHERE p.awardYear > 2010 RETURN count(p)",
+        "category": "date_filter"
+    }
+]

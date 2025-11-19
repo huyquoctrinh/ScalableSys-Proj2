@@ -1,2 +1,7 @@
 .DS_Store
 .env
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+*.pyc
+chat_log.txt
