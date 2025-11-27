@@ -287,6 +287,7 @@ def _(
             """
             Run a query synchronously on the database with LRU caching.
             Cache key includes both question and schema for accuracy.
+            Caches the context (query results) to avoid expensive Cypher generation.
             """
             # Create cache key from question and input schema
             import json
@@ -294,21 +295,21 @@ def _(
             
             cached_result = self.cache_manager.get_data(cache_key)
             if cached_result:
-                print("✓ Cache hit! Using cached query and results.")
-                return cached_result["query"], cached_result["results"]
+                print("✓ Cache hit! Using cached context from previous query.")
+                return cached_result["query"], cached_result["context"]
 
             print("✗ Cache miss. Generating new query...")
             query = self.get_cypher_query(question=question, input_schema=input_schema)
             try:
                 # Run the query on the database
                 result = db_manager.conn.execute(query)
-                results = [item for row in result for item in row]
-                self.cache_manager.set_data(cache_key, {"query": query, "results": results})
-                print(f"✓ Query cached. Cache size: {len(self.cache_manager.cache)}/{self.cache_manager.cache.maxsize}")
+                context = [item for row in result for item in row]
+                self.cache_manager.set_data(cache_key, {"query": query, "context": context})
+                print(f"✓ Context cached. Cache size: {len(self.cache_manager.cache)}/{self.cache_manager.cache.maxsize}")
             except RuntimeError as e:
                 print(f"✗ Error running query: {e}")
-                results = None
-            return query, results
+                context = None
+            return query, context
 
         def forward(self, db_manager: KuzuDatabaseManager, question: str, input_schema: str):
             final_query, final_context = self.run_query(db_manager, question, input_schema)

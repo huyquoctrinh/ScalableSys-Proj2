@@ -4,6 +4,8 @@ pyproject.toml
 cache_method/__init__.py
 cache_method/cache.py
 cache_method/data_manager.py
+cache_method/memory_efficient_cache.py
+cache_method/query_normalizer.py
 marimo_tutorials.egg-info/PKG-INFO
 marimo_tutorials.egg-info/SOURCES.txt
 marimo_tutorials.egg-info/dependency_links.txt
@@ -12,5 +14,6 @@ marimo_tutorials.egg-info/top_level.txt
 test/test_lru_cache.py
 text_2_cypher/__init__.py
 text_2_cypher/exemplar_selector.py
+text_2_cypher/exemplar_selector_neural.py
 text_2_cypher/post_processor.py
 text_2_cypher/query_refinement.py

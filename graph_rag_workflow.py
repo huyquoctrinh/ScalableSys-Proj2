@@ -239,27 +239,56 @@ def process_question(
     cache_key = f"{question}|{schema_str}"
     hashed_key = lru_cache_manager._hash(cache_key)
 
-    # === 2. Check Cache for Final Answer ===
-    cached_answer = lru_cache_manager.get_data(hashed_key)
+    # === 2. Check Cache for Context ===
+    cached_data = lru_cache_manager.get_data(hashed_key)
 
-    if cached_answer:
-        elapsed_time = time.time() - start_time
+    if cached_data:
+        # Cache hit - use cached context to generate fresh answer
+        final_query = cached_data["query"]
+        context = cached_data["context"]
         
         # Log cache hit
         logger.info("="*60)
-        logger.info("CACHE HIT - Skipping database query")
+        logger.info("CACHE HIT - Using cached context")
         logger.info("="*60)
         logger.info(f"Question: {question}")
         logger.info(f"Cache key: {hashed_key[:16]}...")
-        logger.info(f"Response time: {elapsed_time:.3f}s")
-        logger.info(f"Cached answer: {cached_answer}")
+        logger.info(f"Cached query: {final_query}")
+        logger.info(f"Context retrieved from cache: {context}")
         logger.info(f"Cache size: {len(lru_cache_manager.cache)}/{lru_cache_manager.cache.maxsize}")
-        logger.info("="*60 + "\n")
         
         output.append("✅ Cache Status: HIT")
-        output.append(f"⚡ Response Time: {elapsed_time:.3f}s")
         output.append(f"📦 Cache Size: {len(lru_cache_manager.cache)}/{lru_cache_manager.cache.maxsize}")
-        output.append(f"\n💡 ANSWER:\n{cached_answer}")
+        output.append(f"\nCached Cypher Query:\n{final_query}")
+        
+        # Generate answer from cached context
+        if context is None:
+            output.append("\n❌ Cached context is empty. Cannot generate answer.")
+            logger.warning("Cached context is None")
+        else:
+            output.append(f"\nCached Query Result:\n{context}")
+            
+            logger.info("Generating fresh answer from cached context...")
+            answer_start_time = time.time()
+            
+            answer_obj = answer_generator_module(
+                question=question, cypher_query=final_query, context=str(context)
+            )
+            final_answer = answer_obj.response
+            answer_gen_time = time.time() - answer_start_time
+            
+            logger.info(f"✓ Answer generated in {answer_gen_time:.3f}s")
+            logger.info(f"Final Answer: {final_answer}")
+            
+            elapsed_time = time.time() - start_time
+            
+            output.append(f"\n⏱️  Total Processing Time: {elapsed_time:.3f}s")
+            output.append(f"   • Context Retrieval: ~0.001s (from cache)")
+            output.append(f"   • Answer Gen: {answer_gen_time:.3f}s")
+            output.append(f"\n💡 ANSWER:\n{final_answer}")
+        
+        logger.info(f"Total response time: {elapsed_time:.3f}s")
+        logger.info("="*60 + "\n")
         
         if benchmark_stats:
             benchmark_stats.record_hit(elapsed_time)
@@ -346,6 +375,10 @@ def process_question(
         output.append("\n❌ Could not generate an answer due to a query error.")
         logger.warning("No context available for answer generation")
     else:
+        # Store the context in the cache (not the final answer)
+        lru_cache_manager.set_data(hashed_key, {"query": final_query, "context": context})
+        logger.info(f"✓ Context cached with key: {hashed_key[:16]}...")
+        
         # Log answer generation
         logger.info("Generating natural language answer from context...")
         answer_start_time = time.time()
@@ -359,10 +392,6 @@ def process_question(
         logger.info(f"✓ Answer generated in {answer_gen_time:.3f}s")
         logger.info(f"Answer length: {len(final_answer)} characters")
         logger.info(f"Final Answer: {final_answer}")
-        
-        # Store the final answer in the cache
-        lru_cache_manager.set_data(hashed_key, final_answer)
-        logger.info(f"✓ Answer cached with key: {hashed_key[:16]}...")
         
         elapsed_time = time.time() - start_time
         

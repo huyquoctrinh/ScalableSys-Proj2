@@ -1,0 +1,260 @@
+{
+  "timestamp": "2025-11-28 00:20:02",
+  "strategies": [
+    {
+      "name": "1. No Cache",
+      "stats": {
+        "name": "1. No Cache",
+        "total_queries": 30,
+        "total_time": 122.72774648666382,
+        "total_tokens": 7251,
+        "avg_latency": 4.090924882888794,
+        "median_latency": 4.472413420677185,
+        "min_latency": 0.015006542205810547,
+        "max_latency": 12.226967334747314,
+        "stdev_latency": 3.682495676559415,
+        "avg_tokens_per_query": 241.7,
+        "total_tokens_generated": 7251,
+        "throughput_queries_per_sec": 0.24444350082855912,
+        "throughput_tokens_per_sec_aggregate": 59.08199415026274,
+        "avg_tokens_per_sec_per_query": 3402.7515580222257,
+        "median_tokens_per_sec_per_query": 32.71050953240831,
+        "cache_hits": 0,
+        "cache_misses": 30,
+        "cache_hit_rate": 0.0
+      },
+      "per_query_metrics": [
+        {
+          "latency": 11.03571367263794,
+          "tokens": 1101,
+          "was_hit": false,
+          "tokens_per_sec": 99.76699583370223
+        },
+        {
+          "latency": 5.755410194396973,
+          "tokens": 34,
+          "was_hit": false,
+          "tokens_per_sec": 5.907485105596783
+        },
+        {
+          "latency": 2.789271593093872,
+          "tokens": 9,
+          "was_hit": false,
+          "tokens_per_sec": 3.226648857817808
+        },
+        {
+          "latency": 5.757584571838379,
+          "tokens": 108,
+          "was_hit": false,
+          "tokens_per_sec": 18.75786602045794
+        },
+        {
+          "latency": 5.588940382003784,
+          "tokens": 192,
+          "was_hit": false,
+          "tokens_per_sec": 34.35356022372937
+        },
+        {
+          "latency": 0.02330327033996582,
+          "tokens": 1101,
+          "was_hit": false,
+          "tokens_per_sec": 47246.58745050695
+        },
+        {
+          "latency": 1.1265807151794434,
+          "tokens": 35,
+          "was_hit": false,
+          "tokens_per_sec": 31.067458841087255
+        },
+        {
+          "latency": 0.025212526321411133,
+          "tokens": 9,
+          "was_hit": false,
+          "tokens_per_sec": 356.96541811270083
+        },
+        {
+          "latency": 0.015006542205810547,
+          "tokens": 9,
+          "was_hit": false,
+          "tokens_per_sec": 599.7384258523721
+        },
+        {
+          "latency": 7.42058253288269,
+          "tokens": 108,
+          "was_hit": false,
+          "tokens_per_sec": 14.554113443442155
+        }
+      ]
+    },
+    {
+      "name": "2. LRU Cache (Basic)",
+      "stats": {
+        "name": "2. LRU Cache (Basic)",
+        "total_queries": 30,
+        "total_time": 2.495591878890991,
+        "total_tokens": 7251,
+        "avg_latency": 0.08318639596303304,
+        "median_latency": 0.01986706256866455,
+        "min_latency": 0.010548830032348633,
+        "max_latency": 1.098647117614746,
+        "stdev_latency": 0.24586769708734904,
+        "avg_tokens_per_query": 241.7,
+        "total_tokens_generated": 7251,
+        "throughput_queries_per_sec": 12.021196355764554,
+        "throughput_tokens_per_sec_aggregate": 2905.5231591882925,
+        "avg_tokens_per_sec_per_query": 12712.36753986823,
+        "median_tokens_per_sec_per_query": 1093.2736419028558,
+        "cache_hits": 9,
+        "cache_misses": 21,
+        "cache_hit_rate": 30.0
+      },
+      "per_query_metrics": [
+        {
+          "latency": 0.026572465896606445,
+          "tokens": 1101,
+          "was_hit": false,
+          "tokens_per_sec": 41433.86632930473
+        },
+        {
+          "latency": 0.8618443012237549,
+          "tokens": 34,
+          "was_hit": false,
+          "tokens_per_sec": 39.45028116067198
+        },
+        {
+          "latency": 0.018909454345703125,
+          "tokens": 9,
+          "was_hit": false,
+          "tokens_per_sec": 475.95239055880575
+        },
+        {
+          "latency": 0.020210981369018555,
+          "tokens": 108,
+          "was_hit": false,
+          "tokens_per_sec": 5343.629684679902
+        },
+        {
+          "latency": 0.017031431198120117,
+          "tokens": 192,
+          "was_hit": false,
+          "tokens_per_sec": 11273.274557289844
+        },
+        {
+          "latency": 0.01754903793334961,
+          "tokens": 1101,
+          "was_hit": true,
+          "tokens_per_sec": 62738.4819715784
+        },
+        {
+          "latency": 0.014102458953857422,
+          "tokens": 34,
+          "was_hit": true,
+          "tokens_per_sec": 2410.9270667793744
+        },
+        {
+          "latency": 0.013962030410766602,
+          "tokens": 9,
+          "was_hit": true,
+          "tokens_per_sec": 644.6053858369905
+        },
+        {
+          "latency": 0.010685920715332031,
+          "tokens": 9,
+          "was_hit": true,
+          "tokens_per_sec": 842.229718875502
+        },
+        {
+          "latency": 0.01988363265991211,
+          "tokens": 108,
+          "was_hit": false,
+          "tokens_per_sec": 5431.60306002542
+        }
+      ]
+    },
+    {
+      "name": "3. LRU Cache + Normalizer",
+      "stats": {
+        "name": "3. LRU Cache + Normalizer",
+        "total_queries": 30,
+        "total_time": 42.89401316642761,
+        "total_tokens": 7133,
+        "avg_latency": 1.4298004388809205,
+        "median_latency": 0.02141284942626953,
+        "min_latency": 0.01037740707397461,
+        "max_latency": 10.695224523544312,
+        "stdev_latency": 2.431471407583675,
+        "avg_tokens_per_query": 237.76666666666668,
+        "total_tokens_generated": 7133,
+        "throughput_queries_per_sec": 0.6993983025929705,
+        "throughput_tokens_per_sec_aggregate": 166.29360307985527,
+        "avg_tokens_per_sec_per_query": 6013.380739562185,
+        "median_tokens_per_sec_per_query": 478.9241030665917,
+        "cache_hits": 22,
+        "cache_misses": 8,
+        "cache_hit_rate": 73.33333333333333
+      },
+      "per_query_metrics": [
+        {
+          "latency": 2.069207191467285,
+          "tokens": 1101,
+          "was_hit": false,
+          "tokens_per_sec": 532.0878472393455
+        },
+        {
+          "latency": 5.303934335708618,
+          "tokens": 35,
+          "was_hit": false,
+          "tokens_per_sec": 6.598875058532171
+        },
+        {
+          "latency": 1.2777183055877686,
+          "tokens": 9,
+          "was_hit": false,
+          "tokens_per_sec": 7.043806103928262
+        },
+        {
+          "latency": 1.7693521976470947,
+          "tokens": 108,
+          "was_hit": false,
+          "tokens_per_sec": 61.03928892372003
+        },
+        {
+          "latency": 2.5570874214172363,
+          "tokens": 192,
+          "was_hit": false,
+          "tokens_per_sec": 75.08542664278025
+        },
+        {
+          "latency": 0.019388198852539062,
+          "tokens": 1101,
+          "was_hit": true,
+          "tokens_per_sec": 56787.12129857354
+        },
+        {
+          "latency": 0.013933658599853516,
+          "tokens": 35,
+          "was_hit": true,
+          "tokens_per_sec": 2511.9030833989254
+        },
+        {
+          "latency": 0.012677192687988281,
+          "tokens": 9,
+          "was_hit": true,
+          "tokens_per_sec": 709.9363574813812
+        },
+        {
+          "latency": 0.010602712631225586,
+          "tokens": 9,
+          "was_hit": true,
+          "tokens_per_sec": 848.8393784713634
+        },
+        {
+          "latency": 0.011066675186157227,
+          "tokens": 108,
+          "was_hit": true,
+          "tokens_per_sec": 9759.028631751298
+        }
+      ]
+    }
+  ]
+}

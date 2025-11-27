@@ -50,30 +50,31 @@ def run_query(self, db_manager, question, input_schema):
     # Check cache first
     cached_result = self.cache_manager.get_data(cache_key)
     if cached_result:
-        print("✓ Cache hit! Using cached query and results.")
-        return cached_result["query"], cached_result["results"]
+        print("✓ Cache hit! Using cached context from previous query.")
+        return cached_result["query"], cached_result["context"]
     
     # On cache miss: generate, execute, and store
     print("✗ Cache miss. Generating new query...")
     query = self.get_cypher_query(question, input_schema)
     result = db_manager.conn.execute(query)
-    results = [item for row in result for item in row]
+    context = [item for row in result for item in row]
     
-    # Store in cache for future use
+    # Store context in cache for future use (answer will be regenerated)
     self.cache_manager.set_data(cache_key, {
         "query": query,
-        "results": results
+        "context": context
     })
-    print(f"✓ Query cached. Cache size: {len(self.cache_manager.cache)}/{self.cache_manager.cache.maxsize}")
-    return query, results
+    print(f"✓ Context cached. Cache size: {len(self.cache_manager.cache)}/{self.cache_manager.cache.maxsize}")
+    return query, context
 ```
 
-### 2. Advanced Demo Workflow (`advanced_demo_workflow.py`)
+### 2. Command-Line Workflow (`graph_rag_workflow.py`)
 
-The advanced workflow demonstrates full cache integration with:
+The CLI workflow demonstrates full cache integration with benchmarking:
 - Cache status display (HIT/MISS)
 - Cache size monitoring
 - Integration with all Text2Cypher enhancements
+- Performance tracking
 
 ```python
 # Initialize cache
@@ -81,16 +82,25 @@ lru_cache_manager = LRUDataManager(cache_size=128)
 
 # Check cache with hashed key
 cache_key = f"{question}|{schema_str}"
-cached_query = lru_cache_manager.get_data(lru_cache_manager._hash(cache_key))
+cached_data = lru_cache_manager.get_data(lru_cache_manager._hash(cache_key))
 
-if cached_query:
+if cached_data:
     cache_status = "HIT"
-    final_query = cached_query
+    final_query = cached_data["query"]
+    context = cached_data["context"]
+    # Generate fresh answer from cached context
+    answer = answer_generator(question, final_query, context)
 else:
     cache_status = "MISS"
-    # Generate, refine, post-process
+    # Generate, refine, post-process, execute query
     # ...
-    lru_cache_manager.set_data(lru_cache_manager._hash(cache_key), final_query)
+    # Cache the context for future use
+    lru_cache_manager.set_data(
+        lru_cache_manager._hash(cache_key), 
+        {"query": final_query, "context": context}
+    )
+    # Generate answer
+    answer = answer_generator(question, final_query, context)
 ```
 
 ### 3. Basic Demo Workflow (`demo_workflow.py`)
@@ -109,9 +119,15 @@ Query Execution → Answer Generation
 
 ### With Cache (Hit)
 ```
-Question → Cache Lookup → Query Execution → Answer Generation
+Question → Cache Lookup (retrieves context) → Answer Generation
 ```
 **Time**: ~0.5-1 second per query (90%+ faster!)
+
+**Note**: The cache stores the query context (graph results), not the final answer. This means:
+- ✅ Saves expensive Cypher generation (3-7 seconds)
+- ✅ Saves database query execution (1-2 seconds)
+- ✅ Still generates fresh answers each time (0.3-0.8 seconds)
+- ✅ More flexible for different answer generation strategies
 
 ### Cache Statistics
 
@@ -154,13 +170,15 @@ cache_manager = LRUDataManager(cache_size=256)
 db_manager = KuzuDatabaseManager("nobel.kuzu")
 rag = EnhancedGraphRAG(db_manager, cache_manager)
 
-# First call: Cache miss, generates query
+# First call: Cache miss, generates query and executes it
 result1 = rag(db_manager, question="Who won Physics?", input_schema=schema)
 # Output: "✗ Cache miss. Generating new query..."
+# Generates Cypher, executes query, caches context, generates answer
 
-# Second call: Cache hit, reuses query
+# Second call: Cache hit, uses cached context
 result2 = rag(db_manager, question="Who won Physics?", input_schema=schema)
-# Output: "✓ Cache hit! Using cached query and results."
+# Output: "✓ Cache hit! Using cached context from previous query."
+# Retrieves cached context, generates fresh answer (no query generation/execution)
 ```
 
 ### Monitoring Cache Performance
@@ -268,6 +286,17 @@ The LRU cache integration provides:
 - ✅ **Schema-aware caching** for accuracy
 - ✅ **Easy monitoring** with cache statistics
 - ✅ **Configurable size** for different workloads
+- ✅ **Flexible answer generation** - caches context, regenerates answers
+
+### Key Design Decision: Cache Context, Not Answers
+
+The system caches the **query context** (graph results) rather than final answers because:
+
+1. **Performance**: Saves 80-90% of processing time (expensive Cypher generation & execution)
+2. **Flexibility**: Allows different answer generation strategies without invalidating cache
+3. **Accuracy**: Fresh answers can incorporate updated prompting or reasoning
+4. **Cost-effective**: Reduces expensive LLM calls for query generation (most expensive part)
+5. **Debugging**: Easier to debug answer generation when context is available
 
 The cache seamlessly integrates with all Text2Cypher enhancements (exemplar selection, refinement, post-processing) to provide a fast, robust GraphRAG system.
 

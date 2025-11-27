@@ -272,6 +272,18 @@ The cache key includes:
 cache_key = "Which scholars won prizes in Physics?|{'nodes':[...]}"
 ```
 
+### What Gets Cached
+
+The cache stores:
+- **Cypher Query**: The generated and validated query
+- **Context**: The graph query results (not the final answer)
+
+This means:
+- ✅ Skips expensive Cypher generation (3-7 seconds saved)
+- ✅ Skips database query execution (1-2 seconds saved)
+- ✅ Still generates fresh answer each time (~0.5 seconds)
+- ✅ More flexible for different answer generation strategies
+
 ### When Cache Hits Occur
 
 ✅ **Cache HIT** when:
